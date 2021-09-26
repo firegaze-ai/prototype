@@ -10,7 +10,7 @@ import simplejson as json
 
 def main(path_to_dataset_dir: str, path_to_output_dir: str, input_version: str,
          output_version: str, dataset_json: Optional[str],
-         split_percent: Optional[Dict] = {"train": 0.7, "val": 0.2, "test": 0.1},
+         split_percent: Optional[Dict] = {"train": 0.8, "val": 0.1, "test": 0.1},
          class_name: Optional[str] = "Smoke"):
     # TODO: enable dataset replication functionality
 
@@ -22,8 +22,12 @@ def main(path_to_dataset_dir: str, path_to_output_dir: str, input_version: str,
 
     # split scenes into train, val, test
     no_training_examples = int(split_percent["train"] * len(all_scenes))
+    print("Number of training scenes: {}".format(no_training_examples))
     no_val_examples = int(split_percent["val"] * len(all_scenes))
+    print("Number of validation scenes: {}".format(no_val_examples))
+
     no_test_examples = len(all_scenes) - (no_training_examples + no_val_examples)
+    print("Number of test scenes: {}".format(no_test_examples))
     train_scenes = np.random.choice(all_scenes, size=no_training_examples, replace=False)
     remaining_scenes = [scene for scene in all_scenes if scene not in train_scenes]
     val_scenes = np.random.choice(remaining_scenes, size=no_val_examples, replace=False)
