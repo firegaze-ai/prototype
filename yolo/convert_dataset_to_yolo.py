@@ -9,8 +9,9 @@ import simplejson as json
 
 
 def main(path_to_dataset_dir: str, path_to_output_dir: str, input_version: str,
-         output_version: str, dataset_json: Optional[str],
-         split_percent: Optional[Dict] = {"train": 0.8, "val": 0.1, "test": 0.1},
+         output_version: str,
+         dataset_json: Optional[str],
+         split_percent: Dict,
          class_name: Optional[str] = "Smoke"):
     # TODO: enable dataset replication functionality
 
@@ -66,6 +67,15 @@ def main(path_to_dataset_dir: str, path_to_output_dir: str, input_version: str,
         dataset_log.update({id: {"images": all_images, "labels": all_labels}})
     dataset_log.update({"dataset_version": input_version + "." + output_version})
 
+    print("Number of training images: {}\n"
+          "Number of validation images: {}\n"
+          "Number of test images: {}\n".format(
+        len(dataset_log["train"]["images"]),
+        len(dataset_log["val"]["images"]),
+        len(dataset_log["test"]["images"]),
+    )
+    )
+
     with open(os.path.join(path_to_output_dir, "dataset.json"), "w") as outfile:
         json.dump(dataset_log, outfile, indent=4, sort_keys=True)
 
@@ -86,6 +96,9 @@ if __name__ == '__main__':
         description='Take source dataset in custom format (separated by scenes) and output dataset in yolo format')
     parser.add_argument('-i', '--input', help='Source dataset directory', required=True)
     parser.add_argument('-o', '--output', help='Output dataset directory', required=True)
+    parser.add_argument('-tr', '--train', help='Train split ratios', type=float, required=True)
+    parser.add_argument('-v', '--val', help='Val split ratio', type=float, required=True)
+    parser.add_argument('-te', '--test', help='Test split ratio', type=float, required=True)
     parser.add_argument('-iv', '--input_version', help='Input version of the dataset', required=True)
     parser.add_argument('-ov', '--output_version',
         help='Output version of the dataset (new combination of source data)', required=True)
@@ -101,4 +114,5 @@ if __name__ == '__main__':
         path_to_output_dir=args["output"],
         input_version=args["input_version"],
         output_version=args["output_version"],
+        split_percent={"train": args["train"], "val": args["val"], "test": args["test"]},
         dataset_json=None)
