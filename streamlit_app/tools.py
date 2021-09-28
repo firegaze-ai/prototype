@@ -58,9 +58,20 @@ def get_file_content_as_string(path):
 # This function loads an image from Streamlit public repo on S3. We use st.cache on this
 # function as well, so we can reuse the images across runs.
 @st.cache(show_spinner=False)
-def load_image(url):
+def load_image_from_url(url):
     with urllib.request.urlopen(url) as response:
         image = np.asarray(bytearray(response.read()), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    image = image[:, :, [2, 1, 0]]  # BGR -> RGB
+    return image
+
+
+# This function loads an image from disk. We use st.cache on this
+# function as well, so we can reuse the images across runs.
+@st.cache(show_spinner=False)
+def load_image_from_file(path_to_file):
+    with open(path_to_file, "rb") as infile:
+        data = np.asarray(bytearray(infile.read()), dtype="uint8")
+    image = cv2.imdecode(data, cv2.IMREAD_COLOR)
     image = image[:, :, [2, 1, 0]]  # BGR -> RGB
     return image

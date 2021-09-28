@@ -1,5 +1,7 @@
+import os
+
 # Path to the Streamlit public S3 bucket
-DATA_URL_ROOT = "https://streamlit-self-driving.s3-us-west-2.amazonaws.com/"
+DATA_URL_ROOT = os.path.join(os.path.dirname(__file__), "data")
 
 # External files to download.
 EXTERNAL_DEPENDENCIES = {

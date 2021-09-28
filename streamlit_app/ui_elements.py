@@ -11,7 +11,7 @@ def frame_selector_ui(summary):
     object_type = st.sidebar.selectbox("Search for which objects?", summary.columns, 2)
 
     # The user can select a range for how many of the selected objecgt should be present.
-    min_elts, max_elts = st.sidebar.slider("How many %ss (select a range)?" % object_type, 0, 25, [10, 20])
+    min_elts, max_elts = st.sidebar.slider("How many %ss (select a range)?" % object_type, 0, 25, [0, 24])
     selected_frames = get_selected_frames(summary, object_type, min_elts, max_elts)
     if len(selected_frames) < 1:
         return None, None
@@ -50,11 +50,9 @@ def get_selected_frames(summary, label, min_elts, max_elts):
 def draw_image_with_boxes(image, boxes, header, description):
     # Superpose the semi-transparent object detection boxes.    # Colors for the boxes
     LABEL_COLORS = {
-        "car": [255, 0, 0],
-        "pedestrian": [0, 255, 0],
-        "truck": [0, 0, 255],
-        "trafficLight": [255, 255, 0],
-        "biker": [255, 0, 255],
+        "smoke": [255, 0, 0],
+        "fire": [0, 255, 0],
+        "cloud": [0, 0, 255],
     }
     image_with_boxes = image.astype(np.float64)
     for _, (xmin, ymin, xmax, ymax, label) in boxes.iterrows():

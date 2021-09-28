@@ -20,10 +20,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os, cv2
+import validators
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
 from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES
-from tools import download_file, load_image, get_file_content_as_string
+from tools import download_file, load_image_from_url, get_file_content_as_string, load_image_from_file
 from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_boxes
 
 
@@ -62,18 +63,17 @@ def run_the_app():
     def create_summary(metadata):
         one_hot_encoded = pd.get_dummies(metadata[["frame", "label"]], columns=["label"])
         summary = one_hot_encoded.groupby(["frame"]).sum().rename(columns={
-            "label_biker": "biker",
-            "label_car": "car",
-            "label_pedestrian": "pedestrian",
-            "label_trafficLight": "traffic light",
-            "label_truck": "truck"
+            "label_smoke": "smoke",
+            "label_fire": "fire",
+            "label_cloud": "cloud",
+
         })
         return summary
 
     # An amazing property of st.cached functions is that you can pipe them into
     # one another to form a computation DAG (directed acyclic graph). Streamlit
     # recomputes only whatever subset is required to get the right answer!
-    metadata = load_metadata(os.path.join(DATA_URL_ROOT, "labels.csv.gz"))
+    metadata = load_metadata(os.path.join(DATA_URL_ROOT, "labels.csv"))
     summary = create_summary(metadata)
 
     # Uncomment these lines to peek at these DataFrames.
@@ -90,7 +90,10 @@ def run_the_app():
 
     # Load the image from S3.
     image_url = os.path.join(DATA_URL_ROOT, selected_frame)
-    image = load_image(image_url)
+    if os.path.isfile(image_url):
+        image = load_image_from_file(image_url)
+    elif validators.url(image_url):
+        image = load_image_from_url(image_url)
 
     # Add boxes for objects on the image. These are the boxes for the ground image.
     boxes = metadata[metadata.frame == selected_frame].drop(columns=["frame"])
@@ -121,7 +124,7 @@ def yolo_v3(image, confidence_threshold, overlap_threshold):
     ymin = [100, ]
     xmax = [200, ]
     ymax = [200, ]
-    labels = ["pedestrian", ]
+    labels = ["smoke", ]
 
     boxes = pd.DataFrame({"xmin": xmin, "ymin": ymin, "xmax": xmax, "ymax": ymax, "labels": labels})
     return boxes[["xmin", "ymin", "xmax", "ymax", "labels"]]
