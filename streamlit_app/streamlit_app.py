@@ -18,12 +18,12 @@
 
 import streamlit as st
 import pandas as pd
-import numpy as np
-import os, cv2
+import os
 import validators
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
 from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES
+from inference import yolo_v5
 from tools import download_file, load_image_from_url, get_file_content_as_string, load_image_from_file
 from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_boxes
 
@@ -101,34 +101,13 @@ def run_the_app():
         "**Human-annotated data** (frame `%i`)" % selected_frame_index)
 
     # Get the boxes for the objects detected by YOLO by running the YOLO model.
-    yolo_boxes = yolo_v3(image, confidence_threshold, overlap_threshold)
+    yolo_boxes = yolo_v5(image, confidence_threshold, overlap_threshold)
     draw_image_with_boxes(image, yolo_boxes, "Real-time Computer Vision",
         "**YOLO v3 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
             overlap_threshold, confidence_threshold))
 
 
 # Run the YOLO model to detect objects.
-def yolo_v3(image, confidence_threshold, overlap_threshold):
-    # Load the network. Because this is cached it will only happen once.
-    @st.cache(allow_output_mutation=True)
-    def load_network(config_path, weights_path):
-        net = cv2.dnn.readNetFromDarknet(config_path, weights_path)
-        output_layer_names = net.getLayerNames()
-        output_layer_names = [output_layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
-        return net, output_layer_names
-
-    net, output_layer_names = load_network("../yolov3.cfg", "yolov3.weights")
-
-    # Run the YOLO neural net.
-    xmin = [100, ]
-    ymin = [100, ]
-    xmax = [200, ]
-    ymax = [200, ]
-    labels = ["smoke", ]
-
-    boxes = pd.DataFrame({"xmin": xmin, "ymin": ymin, "xmax": xmax, "ymax": ymax, "labels": labels})
-    return boxes[["xmin", "ymin", "xmax", "ymax", "labels"]]
-
 
 
 if __name__ == "__main__":
