@@ -139,3 +139,7 @@ cython_debug/
 
 # PyCharm folders
 .idea/
+
+# model weights
+yolov3.cfg
+yolov3.weights
