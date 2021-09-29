@@ -55,9 +55,10 @@ def draw_image_with_boxes(image, boxes, header, description):
         "cloud": [0, 0, 255],
     }
     image_with_boxes = image.astype(np.float64)
-    for _, (xmin, ymin, xmax, ymax, label) in boxes.iterrows():
-        image_with_boxes[int(ymin):int(ymax), int(xmin):int(xmax), :] += LABEL_COLORS[label]
-        image_with_boxes[int(ymin):int(ymax), int(xmin):int(xmax), :] /= 2
+    if isinstance(boxes, pd.DataFrame):
+        for _, (xmin, ymin, xmax, ymax, label) in boxes.iterrows():
+            image_with_boxes[int(ymin):int(ymax), int(xmin):int(xmax), :] += LABEL_COLORS[label]
+            image_with_boxes[int(ymin):int(ymax), int(xmin):int(xmax), :] /= 2
 
     # Draw the header and image.
     st.subheader(header)
