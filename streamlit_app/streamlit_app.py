@@ -184,6 +184,8 @@ def run_the_app_live():
             image = load_image_from_file(image_url)
         elif validators.url(image_url):
             image = load_image_from_url(image_url)
+            if os.path.isfile(path_to_image):
+                os.remove(path_to_image)
             plt.imsave(path_to_image, image)
 
         images.append((path_to_image, image, image_name))
