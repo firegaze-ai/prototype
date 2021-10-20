@@ -14,3 +14,5 @@ EXTERNAL_DEPENDENCIES = {
         "size": 8342
     }
 }
+
+RESULTS_DIR = os.path.join(DATA_URL_ROOT, "results")

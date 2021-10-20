@@ -15,10 +15,9 @@
 
 # This demo lets you to explore the Udacity self-driving car image dataset.
 # More info: https://github.com/streamlit/demo-self-driving
-import glob
+import random
 import shutil
 
-import scipy
 import streamlit as st
 import pandas as pd
 import os
@@ -26,7 +25,7 @@ import validators
 import matplotlib.pyplot as plt
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
-from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES
+from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, RESULTS_DIR
 from inference import yolo_v5
 from tools import download_file, load_image_from_url, get_file_content_as_string, load_image_from_file
 from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_boxes
@@ -42,6 +41,7 @@ def main():
 
     # Once we have the dependencies, add a selector for the app mode on the sidebar.
     st.sidebar.title("What to do")
+
     app_mode = st.sidebar.selectbox("Choose the app mode",
         ["Show instructions", "Run the app on static dataset", "Run the app on live cams",
          "Show the source code"])
@@ -62,26 +62,34 @@ def clean_up_subfolders(path: str):
     shutil.rmtree(path)
 
 
+def init_folders():
+    if os.path.exists(RESULTS_DIR):
+        clean_up_subfolders(RESULTS_DIR)
+    os.mkdir(RESULTS_DIR)
+
+
+# To make Streamlit fast, st.cache allows us to reuse computation across runs.
+# In this common pattern, we download data from an endpoint only once.
+@st.cache
+def load_metadata(url):
+    return pd.read_csv(url)
+
+
+# This function uses some Pandas magic to summarize the metadata Dataframe.
+@st.cache
+def create_summary(metadata):
+    one_hot_encoded = pd.get_dummies(metadata[["frame", "label"]], columns=["label"])
+    summary = one_hot_encoded.groupby(["frame"]).sum().rename(columns={
+        "label_smoke": "smoke (implemented)",
+        "label_fire": "fire (not implemented)",
+        "label_cloud": "cloud (not implemented)",
+    })
+    return summary
+
+
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
 def run_the_app_static():
-    clean_up_subfolders(os.path.join(DATA_URL_ROOT, "results"))
-
-    # To make Streamlit fast, st.cache allows us to reuse computation across runs.
-    # In this common pattern, we download data from an endpoint only once.
-    @st.cache
-    def load_metadata(url):
-        return pd.read_csv(url)
-
-    # This function uses some Pandas magic to summarize the metadata Dataframe.
-    @st.cache
-    def create_summary(metadata):
-        one_hot_encoded = pd.get_dummies(metadata[["frame", "label"]], columns=["label"])
-        summary = one_hot_encoded.groupby(["frame"]).sum().rename(columns={
-            "label_smoke": "smoke",
-            "label_fire": "fire",
-            "label_cloud": "cloud",
-        })
-        return summary
+    init_folders()
 
     # An amazing property of st.cached functions is that you can pipe them into
     # one another to form a computation DAG (directed acyclic graph). Streamlit
@@ -116,31 +124,21 @@ def run_the_app_static():
     # Get the boxes for the objects detected by YOLO by running the YOLO model.
     yolo_boxes = yolo_v5(image_url, image, confidence_threshold, overlap_threshold)
     draw_image_with_boxes(image, yolo_boxes, "Real-time Computer Vision",
-        "**YOLO v3 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
+        "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
             overlap_threshold, confidence_threshold))
 
 
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
 def run_the_app_live():
-    clean_up_subfolders(os.path.join(DATA_URL_ROOT, "results"))
+    # avoids the "DuplicateWidgetID" warning
+    if "RefreshButton" in st.session_state:
+        del st.session_state["RefreshButton"]
 
+    # creates a button and assigns a callback
+    if st.button('Refresh', key="RefreshButton"):
+        run_the_app_live()
 
-    # To make Streamlit fast, st.cache allows us to reuse computation across runs.
-    # In this common pattern, we download data from an endpoint only once.
-    @st.cache
-    def load_metadata(url):
-        return pd.read_csv(url)
-
-    # This function uses some Pandas magic to summarize the metadata Dataframe.
-    @st.cache
-    def create_summary(metadata):
-        one_hot_encoded = pd.get_dummies(metadata[["frame", "label"]], columns=["label"])
-        summary = one_hot_encoded.groupby(["frame"]).sum().rename(columns={
-            "label_smoke": "smoke",
-            "label_fire": "fire",
-            "label_cloud": "cloud",
-        })
-        return summary
+    init_folders()
 
     # An amazing property of st.cached functions is that you can pipe them into
     # one another to form a computation DAG (directed acyclic graph). Streamlit

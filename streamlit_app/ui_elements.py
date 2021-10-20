@@ -9,24 +9,22 @@ def frame_selector_ui(summary):
 
     # The user can pick which type of object to search for.
     object_type = st.sidebar.selectbox("Search for which objects?", summary.columns, 2)
-
-    # The user can select a range for how many of the selected objecgt should be present.
-    min_elts, max_elts = st.sidebar.slider("How many %ss (select a range)?" % object_type, 0, 25, [0, 24])
-    selected_frames = get_selected_frames(summary, object_type, min_elts, max_elts)
+    selected_frames = get_selected_frames(summary, object_type)
     if len(selected_frames) < 1:
         return None, None
 
     # Choose a frame out of the selected frames.
     selected_frame_index = st.sidebar.slider("Choose a frame (index)", 0, len(selected_frames) - 1, 0)
 
-    # Draw an altair chart in the sidebar with information on the frame.
-    objects_per_frame = summary.loc[selected_frames, object_type].reset_index(drop=True).reset_index()
-    chart = alt.Chart(objects_per_frame, height=120).mark_area().encode(
-        alt.X("index:Q", scale=alt.Scale(nice=False)),
-        alt.Y("%s:Q" % object_type))
-    selected_frame_df = pd.DataFrame({"selected_frame": [selected_frame_index]})
-    vline = alt.Chart(selected_frame_df).mark_rule(color="red").encode(x="selected_frame")
-    st.sidebar.altair_chart(alt.layer(chart, vline))
+    if 0:
+        # Draw an altair chart in the sidebar with information on the frame.
+        objects_per_frame = summary.loc[selected_frames, object_type].reset_index(drop=True).reset_index()
+        chart = alt.Chart(objects_per_frame, height=120).mark_area().encode(
+            alt.X("index:Q", scale=alt.Scale(nice=False)),
+            alt.Y("%s:Q" % object_type))
+        selected_frame_df = pd.DataFrame({"selected_frame": [selected_frame_index]})
+        vline = alt.Chart(selected_frame_df).mark_rule(color="red").encode(x="selected_frame")
+        st.sidebar.altair_chart(alt.layer(chart, vline))
 
     selected_frame = selected_frames[selected_frame_index]
     return selected_frame_index, selected_frame
@@ -42,8 +40,8 @@ def object_detector_ui():
 
 # Select frames based on the selection in the sidebar
 @st.cache(hash_funcs={np.ufunc: str})
-def get_selected_frames(summary, label, min_elts, max_elts):
-    return summary[np.logical_and(summary[label] >= min_elts, summary[label] <= max_elts)].index
+def get_selected_frames(summary, label):
+    return summary[summary == summary[label]].index
 
 
 # Draws an image with boxes overlayed to indicate the presence of cars, pedestrians etc.

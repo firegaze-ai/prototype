@@ -57,6 +57,8 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
         "save_txt": True,
         "nosave": True,
         "device": "CPU",
+        "conf_thres": confidence_threshold,  # confidence threshold
+        "iou_thres": overlap_threshold,  # NMS IOU threshold
     }
 
     check_requirements(exclude=('tensorboard', 'thop'))
