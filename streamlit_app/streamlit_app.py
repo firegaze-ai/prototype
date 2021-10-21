@@ -17,7 +17,9 @@ from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_b
 
 def main():
     # Render the readme as markdown using st.markdown.
-    readme_text = st.markdown(get_file_content_as_string("instructions.md"))
+    with open(os.path.join(os.path.dirname(__file__), "instructions.md"), "r") as infile:
+        data = infile.read()
+    readme_text = st.markdown(data)
 
     # Download external dependencies.
     for filename in EXTERNAL_DEPENDENCIES.keys():
@@ -27,13 +29,10 @@ def main():
     st.sidebar.title("What to do")
 
     app_mode = st.sidebar.selectbox("Choose the app mode",
-        ["Show instructions", "Run the app on static example dataset", "Run the app on live cams",
-         "Show the source code"])
+        ["Show instructions", "Run the app on static example dataset", "Run the app on live cams"
+         ])
     if app_mode == "Show instructions":
         st.sidebar.success('To continue select "Run the app on static example dataset".')
-    elif app_mode == "Show the source code":
-        readme_text.empty()
-        st.code(get_file_content_as_string("app.py"))
     elif app_mode == "Run the app on static example dataset":
         readme_text.empty()
         run_the_app_static()
