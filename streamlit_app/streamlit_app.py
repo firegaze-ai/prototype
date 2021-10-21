@@ -1,20 +1,3 @@
-# -*- coding: utf-8 -*-
-# Copyright 2018-2019 Streamlit Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# This demo lets you to explore the Udacity self-driving car image dataset.
-# More info: https://github.com/streamlit/demo-self-driving
 import glob
 import random
 import shutil
@@ -181,17 +164,6 @@ def run_the_app_live():
         run_the_app_live()
 
     init_folders()
-
-    # path_to_labels_csv = os.path.join(STATIC_IMAGES_DIR, "labels.csv")
-    # batch_parse_yolo_labels_to_csv(STATIC_IMAGES_DIR, path_to_labels_csv)
-    #
-    # metadata = load_metadata(path_to_labels_csv)
-    # summary = create_summary(metadata)
-    # # Draw the UI elements to search for objects (pedestrians, cars, etc.)
-    # selected_frame_index, selected_frame = frame_selector_ui(summary)
-    # if selected_frame_index == None:
-    #     st.error("No frames fit the criteria. Please select different label or number.")
-    #     return
 
     # Draw the UI element to select parameters for the YOLO object detector.
     confidence_threshold, overlap_threshold = object_detector_ui()
