@@ -25,7 +25,7 @@ import validators
 import matplotlib.pyplot as plt
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
-from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, RESULTS_DIR
+from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, RESULTS_DIR, LIVE_IMAGES_DIR, STATIC_IMAGES_DIR
 from inference import yolo_v5
 from tools import download_file, load_image_from_url, get_file_content_as_string, load_image_from_file
 from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_boxes
@@ -43,14 +43,14 @@ def main():
     st.sidebar.title("What to do")
 
     app_mode = st.sidebar.selectbox("Choose the app mode",
-        ["Show instructions", "Run the app on static dataset", "Run the app on live cams",
+        ["Show instructions", "Run the app on static example dataset", "Run the app on live cams",
          "Show the source code"])
     if app_mode == "Show instructions":
-        st.sidebar.success('To continue select "Run the app on static dataset".')
+        st.sidebar.success('To continue select "Run the app on static example dataset".')
     elif app_mode == "Show the source code":
         readme_text.empty()
         st.code(get_file_content_as_string("app.py"))
-    elif app_mode == "Run the app on static dataset":
+    elif app_mode == "Run the app on static example dataset":
         readme_text.empty()
         run_the_app_static()
     elif app_mode == "Run the app on live cams":
@@ -66,6 +66,10 @@ def init_folders():
     if os.path.exists(RESULTS_DIR):
         clean_up_subfolders(RESULTS_DIR)
     os.mkdir(RESULTS_DIR)
+    if not os.path.exists(LIVE_IMAGES_DIR):
+        os.mkdir(LIVE_IMAGES_DIR)
+    if not os.path.exists(STATIC_IMAGES_DIR):
+        os.mkdir(STATIC_IMAGES_DIR)
 
 
 # To make Streamlit fast, st.cache allows us to reuse computation across runs.
@@ -91,10 +95,13 @@ def create_summary(metadata):
 def run_the_app_static():
     init_folders()
 
+
+
+
     # An amazing property of st.cached functions is that you can pipe them into
     # one another to form a computation DAG (directed acyclic graph). Streamlit
     # recomputes only whatever subset is required to get the right answer!
-    metadata = load_metadata(os.path.join(DATA_URL_ROOT, "labels.csv"))
+    metadata = load_metadata(os.path.join(STATIC_IMAGES_DIR, "labels.csv"))
     summary = create_summary(metadata)
 
     # Uncomment these lines to peek at these DataFrames.
@@ -110,7 +117,7 @@ def run_the_app_static():
     confidence_threshold, overlap_threshold = object_detector_ui()
 
     # Load the image from S3.
-    image_url = os.path.join(DATA_URL_ROOT, selected_frame)
+    image_url = os.path.join(STATIC_IMAGES_DIR, selected_frame)
     if os.path.isfile(image_url):
         image = load_image_from_file(image_url)
     elif validators.url(image_url):
@@ -140,21 +147,6 @@ def run_the_app_live():
 
     init_folders()
 
-    # An amazing property of st.cached functions is that you can pipe them into
-    # one another to form a computation DAG (directed acyclic graph). Streamlit
-    # recomputes only whatever subset is required to get the right answer!
-    metadata = load_metadata(os.path.join(DATA_URL_ROOT, "labels.csv"))
-    summary = create_summary(metadata)
-
-    # Uncomment these lines to peek at these DataFrames.
-    # st.write('## Metadata', metadata[:1000], '## Summary', summary[:1000])
-
-    # Draw the UI elements to search for objects (pedestrians, cars, etc.)
-    selected_frame_index, selected_frame = frame_selector_ui(summary)
-    if selected_frame_index == None:
-        st.error("No frames fit the criteria. Please select different label or number.")
-        return
-
     # Draw the UI element to select parameters for the YOLO object detector.
     confidence_threshold, overlap_threshold = object_detector_ui()
 
@@ -177,7 +169,7 @@ def run_the_app_live():
 
     images = []
     for image_name, image_url in urls.items():
-        path_to_image = os.path.join(DATA_URL_ROOT, image_name)
+        path_to_image = os.path.join(DATA_URL_ROOT, "live_images", image_name)
         if os.path.isfile(image_url):
             image = load_image_from_file(image_url)
         elif validators.url(image_url):

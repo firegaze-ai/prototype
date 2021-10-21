@@ -16,3 +16,5 @@ EXTERNAL_DEPENDENCIES = {
 }
 
 RESULTS_DIR = os.path.join(DATA_URL_ROOT, "results")
+LIVE_IMAGES_DIR = os.path.join(DATA_URL_ROOT, "live_images")
+STATIC_IMAGES_DIR = os.path.join(DATA_URL_ROOT, "static_images")
