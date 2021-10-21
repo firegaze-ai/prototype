@@ -70,6 +70,7 @@ def load_image_from_url(url):
 # function as well, so we can reuse the images across runs.
 @st.cache(show_spinner=False)
 def load_image_from_file(path_to_file):
+    print(path_to_file)
     with open(path_to_file, "rb") as infile:
         data = np.asarray(bytearray(infile.read()), dtype="uint8")
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)

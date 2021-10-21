@@ -15,6 +15,7 @@
 
 # This demo lets you to explore the Udacity self-driving car image dataset.
 # More info: https://github.com/streamlit/demo-self-driving
+import glob
 import random
 import shutil
 
@@ -26,7 +27,7 @@ import matplotlib.pyplot as plt
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
 from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, RESULTS_DIR, LIVE_IMAGES_DIR, STATIC_IMAGES_DIR
-from inference import yolo_v5
+from inference import yolo_v5, parse_yolo_label_into_dataframe, transform_ratio_to_pixels
 from tools import download_file, load_image_from_url, get_file_content_as_string, load_image_from_file
 from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_boxes
 
@@ -91,17 +92,51 @@ def create_summary(metadata):
     return summary
 
 
+def batch_parse_yolo_labels_to_csv(path_to_images_and_labels_dir: str, path_to_labels_csv: str):
+    list_of_df = [(os.path.splitext(os.path.basename(txt))[0], parse_yolo_label_into_dataframe(txt)) for txt
+                  in
+                  glob.glob(os.path.join(path_to_images_and_labels_dir, "*.txt"))]
+
+    # add new column "image.ext" and load image into memory
+    images = []
+    for filename, df in list_of_df:
+        paths_to_images = glob.glob(os.path.join(path_to_images_and_labels_dir, filename + ".jp*"))
+        if len(paths_to_images) > 0:
+            path_to_image = paths_to_images[0]
+        else:
+            image_filename = ""
+        df["frame"] = os.path.basename(path_to_image)
+        image = load_image_from_file(path_to_image)
+        df = transform_ratio_to_pixels(df, image)
+
+    concatenated_df = pd.concat(list(zip(*list_of_df))[1]).rename(columns={'labels': 'label'})
+
+    # Use dummy entries for cloud and fire
+    concatenated_df = concatenated_df.append(
+        {"label": "cloud", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1, "frame": "none.jpg"},
+        ignore_index=True)
+    concatenated_df = concatenated_df.append(
+        {"label": "fire", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1, "frame": "none.jpg"},
+        ignore_index=True)
+
+    # reorder columns to match original csv
+    concatenated_df = concatenated_df[["frame", "xmin", "ymin", "xmax", "ymax", "label"]]
+
+    concatenated_df.to_csv(path_to_labels_csv, index=False)
+
+
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
 def run_the_app_static():
     init_folders()
 
-
-
-
     # An amazing property of st.cached functions is that you can pipe them into
     # one another to form a computation DAG (directed acyclic graph). Streamlit
     # recomputes only whatever subset is required to get the right answer!
-    metadata = load_metadata(os.path.join(STATIC_IMAGES_DIR, "labels.csv"))
+
+    path_to_labels_csv = os.path.join(STATIC_IMAGES_DIR, "labels.csv")
+    batch_parse_yolo_labels_to_csv(STATIC_IMAGES_DIR, path_to_labels_csv)
+
+    metadata = load_metadata(path_to_labels_csv)
     summary = create_summary(metadata)
 
     # Uncomment these lines to peek at these DataFrames.
@@ -146,6 +181,17 @@ def run_the_app_live():
         run_the_app_live()
 
     init_folders()
+
+    # path_to_labels_csv = os.path.join(STATIC_IMAGES_DIR, "labels.csv")
+    # batch_parse_yolo_labels_to_csv(STATIC_IMAGES_DIR, path_to_labels_csv)
+    #
+    # metadata = load_metadata(path_to_labels_csv)
+    # summary = create_summary(metadata)
+    # # Draw the UI elements to search for objects (pedestrians, cars, etc.)
+    # selected_frame_index, selected_frame = frame_selector_ui(summary)
+    # if selected_frame_index == None:
+    #     st.error("No frames fit the criteria. Please select different label or number.")
+    #     return
 
     # Draw the UI element to select parameters for the YOLO object detector.
     confidence_threshold, overlap_threshold = object_detector_ui()

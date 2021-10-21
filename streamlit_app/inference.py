@@ -73,10 +73,15 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
 
     boxes_df = parse_yolo_label_into_dataframe(path_to_label_txt)
     if boxes_df is not None:
-        boxes_df["xmin"] = (boxes_df["xmin"] * image.shape[1]).astype("int")
-        boxes_df["xmax"] = (boxes_df["xmax"] * image.shape[1]).astype("int")
-        boxes_df["ymin"] = (boxes_df["ymin"] * image.shape[0]).astype("int")
-        boxes_df["ymax"] = (boxes_df["ymax"] * image.shape[0]).astype("int")
+        boxes_df = transform_ratio_to_pixels(boxes_df, image)
 
         return boxes_df[["xmin", "ymin", "xmax", "ymax", "labels"]]
     return None
+
+
+def transform_ratio_to_pixels(boxes_df: pd.DataFrame, image) -> pd.DataFrame:
+    boxes_df["xmin"] = (boxes_df["xmin"] * image.shape[1]).astype("int")
+    boxes_df["xmax"] = (boxes_df["xmax"] * image.shape[1]).astype("int")
+    boxes_df["ymin"] = (boxes_df["ymin"] * image.shape[0]).astype("int")
+    boxes_df["ymax"] = (boxes_df["ymax"] * image.shape[0]).astype("int")
+    return boxes_df
