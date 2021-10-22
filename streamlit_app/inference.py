@@ -7,8 +7,8 @@ import streamlit as st
 
 from config import DATA_URL_ROOT
 
-from yolov5.detect import run
-from yolov5.utils.general import check_requirements
+from yolov5_merged.detect import run
+from yolov5_merged.utils.general import check_requirements
 
 YOLO_LABELS_TO_STRINGS = {0: "smoke"}
 
