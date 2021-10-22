@@ -1,7 +1,6 @@
 import os
 from typing import Optional
 
-import cv2
 import pandas as pd
 import streamlit as st
 
