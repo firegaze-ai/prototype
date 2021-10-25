@@ -1,3 +1,5 @@
+<img src="data/firegaze_banner.png" alt="firegaze.ai" width="400"/>
+
 # Wildfire smoke detector
 
 This project demonstrates a wildfire smoke detection system powered by [YOLO v5 object detection](https://github.com/ultralytics/yolov5) into an interactive [Streamlit](https://streamlit.io) app.
