@@ -86,9 +86,12 @@ def run_the_app_static():
     draw_image_with_boxes(image, yolo_boxes, "Real-time Computer Vision",
         "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
             overlap_threshold, confidence_threshold))
+    del yolo_boxes
+    gc.collect()
 
 
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
+@profile
 def run_the_app_live():
     # avoids the "DuplicateWidgetID" warning
     if "RefreshButton" in st.session_state:
@@ -141,6 +144,8 @@ def run_the_app_live():
             "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
                 overlap_threshold, confidence_threshold))
 
+    del yolo_boxes, images
+    gc.collect()
 
 if __name__ == "__main__":
     main()

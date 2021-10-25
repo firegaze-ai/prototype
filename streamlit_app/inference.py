@@ -37,7 +37,7 @@ def parse_yolo_label_into_dataframe(path_to_label_txt: str) -> Optional[pd.DataF
 
 
 # Run the YOLO model to detect objects.
-@st.cache
+# @st.cache
 def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
 
     path_to_weights = os.path.join(DATA_URL_ROOT, "weights.pt")
@@ -65,8 +65,10 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
     boxes_df = parse_yolo_label_into_dataframe(path_to_label_txt)
     if boxes_df is not None:
         boxes_df = transform_ratio_to_pixels(boxes_df, image)
-
-        return boxes_df[["xmin", "ymin", "xmax", "ymax", "labels"]]
+        result = boxes_df[["xmin", "ymin", "xmax", "ymax", "labels"]]
+        del boxes_df, image
+        gc.collect()
+        return result
     return None
 
 
