@@ -1,18 +1,16 @@
-import glob
-import random
-import shutil
 import urllib
 
 import streamlit as st
-import pandas as pd
 import os
 import validators
 import matplotlib.pyplot as plt
+from memory_profiler import profile
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
-from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, RESULTS_DIR, LIVE_IMAGES_DIR, STATIC_IMAGES_DIR
-from inference import yolo_v5, parse_yolo_label_into_dataframe, transform_ratio_to_pixels
-from tools import download_file, load_image_from_url, get_file_content_as_string, load_image_from_file
+from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, STATIC_IMAGES_DIR
+from inference import yolo_v5, batch_parse_yolo_labels_to_csv
+from tools import download_file, load_image_from_url, load_image_from_file, load_metadata, create_summary, \
+    init_folders
 from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_boxes
 
 
@@ -42,73 +40,8 @@ def main():
         run_the_app_live()
 
 
-def clean_up_subfolders(path: str):
-    shutil.rmtree(path)
-
-
-def init_folders():
-    if os.path.exists(RESULTS_DIR):
-        clean_up_subfolders(RESULTS_DIR)
-    os.mkdir(RESULTS_DIR)
-    if not os.path.exists(LIVE_IMAGES_DIR):
-        os.mkdir(LIVE_IMAGES_DIR)
-    if not os.path.exists(STATIC_IMAGES_DIR):
-        os.mkdir(STATIC_IMAGES_DIR)
-
-
-# To make Streamlit fast, st.cache allows us to reuse computation across runs.
-# In this common pattern, we download data from an endpoint only once.
-@st.cache
-def load_metadata(url):
-    return pd.read_csv(url)
-
-
-# This function uses some Pandas magic to summarize the metadata Dataframe.
-@st.cache
-def create_summary(metadata):
-    one_hot_encoded = pd.get_dummies(metadata[["frame", "label"]], columns=["label"])
-    summary = one_hot_encoded.groupby(["frame"]).sum().rename(columns={
-        "label_smoke": "smoke (implemented)",
-        "label_fire": "fire (not implemented)",
-        "label_cloud": "cloud (not implemented)",
-    })
-    return summary
-
-
-def batch_parse_yolo_labels_to_csv(path_to_images_and_labels_dir: str, path_to_labels_csv: str):
-    list_of_df = [(os.path.splitext(os.path.basename(txt))[0], parse_yolo_label_into_dataframe(txt)) for txt
-                  in
-                  glob.glob(os.path.join(path_to_images_and_labels_dir, "*.txt"))]
-
-    # add new column "image.ext" and load image into memory
-    images = []
-    for filename, df in list_of_df:
-        paths_to_images = glob.glob(os.path.join(path_to_images_and_labels_dir, filename + ".jp*"))
-        if len(paths_to_images) > 0:
-            path_to_image = paths_to_images[0]
-        else:
-            image_filename = ""
-        df["frame"] = os.path.basename(path_to_image)
-        image = load_image_from_file(path_to_image)
-        df = transform_ratio_to_pixels(df, image)
-
-    concatenated_df = pd.concat(list(zip(*list_of_df))[1]).rename(columns={'labels': 'label'})
-
-    # Use dummy entries for cloud and fire
-    concatenated_df = concatenated_df.append(
-        {"label": "cloud", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1, "frame": "none.jpg"},
-        ignore_index=True)
-    concatenated_df = concatenated_df.append(
-        {"label": "fire", "xmin": 0, "xmax": 1, "ymin": 0, "ymax": 1, "frame": "none.jpg"},
-        ignore_index=True)
-
-    # reorder columns to match original csv
-    concatenated_df = concatenated_df[["frame", "xmin", "ymin", "xmax", "ymax", "label"]]
-
-    concatenated_df.to_csv(path_to_labels_csv, index=False)
-
-
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
+@profile
 def run_the_app_static():
     init_folders()
 

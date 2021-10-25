@@ -1,11 +1,13 @@
 import os
+import shutil
 import urllib
 import numpy as np
 import cv2
+import pandas as pd
 
 import streamlit as st
 
-from config import EXTERNAL_DEPENDENCIES
+from config import EXTERNAL_DEPENDENCIES, RESULTS_DIR, LIVE_IMAGES_DIR, STATIC_IMAGES_DIR
 
 
 # This file downloader demonstrates Streamlit animation.
@@ -76,3 +78,36 @@ def load_image_from_file(path_to_file):
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
     image = image[:, :, [2, 1, 0]]  # BGR -> RGB
     return image
+
+
+@st.cache
+def load_metadata(url):
+    # To make Streamlit fast, st.cache allows us to reuse computation across runs.
+    # In this common pattern, we download data from an endpoint only once.
+    return pd.read_csv(url)
+
+
+@st.cache
+def create_summary(metadata):
+    # This function uses some Pandas magic to summarize the metadata Dataframe.
+    one_hot_encoded = pd.get_dummies(metadata[["frame", "label"]], columns=["label"])
+    summary = one_hot_encoded.groupby(["frame"]).sum().rename(columns={
+        "label_smoke": "smoke (implemented)",
+        "label_fire": "fire (not implemented)",
+        "label_cloud": "cloud (not implemented)",
+    })
+    return summary
+
+
+def clean_up_subfolders(path: str):
+    shutil.rmtree(path)
+
+
+def init_folders():
+    if os.path.exists(RESULTS_DIR):
+        clean_up_subfolders(RESULTS_DIR)
+    os.mkdir(RESULTS_DIR)
+    if not os.path.exists(LIVE_IMAGES_DIR):
+        os.mkdir(LIVE_IMAGES_DIR)
+    if not os.path.exists(STATIC_IMAGES_DIR):
+        os.mkdir(STATIC_IMAGES_DIR)
