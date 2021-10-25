@@ -5,6 +5,7 @@ matplotlib==3.4.3
 streamlit==0.89.0
 validators==0.18.2
 numpy==1.21.2
+memory_profiler
 
 # YOLOv5 dependencies
 
