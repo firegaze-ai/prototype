@@ -39,16 +39,8 @@ def parse_yolo_label_into_dataframe(path_to_label_txt: str) -> Optional[pd.DataF
 # Run the YOLO model to detect objects.
 @st.cache
 def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
-    # Load the network. Because this is cached it will only happen once.
-    @st.cache(allow_output_mutation=True)
-    def load_network(weights_path):
-        with open(weights_path, "rb") as infile:
-            net = infile.read()
-        return net
 
     path_to_weights = os.path.join(DATA_URL_ROOT, "weights.pt")
-    # weights = load_network(path_to_weights)
-
 
     # Run the YOLO neural net.
     opts = {
@@ -67,10 +59,6 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
     check_requirements(exclude=('tensorboard', 'thop'))
     save_dir = run(**opts)
 
-    # TODO: implement YOLOv5 predicted label parser (from output .txt file)
-
-    ### Dummy code follows
-    print(save_dir)
     path_to_label_txt = os.path.join(save_dir, "labels",
         os.path.splitext(os.path.basename(path_to_image))[0] + ".txt")
 
