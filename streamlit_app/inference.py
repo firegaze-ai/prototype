@@ -37,7 +37,7 @@ def parse_yolo_label_into_dataframe(path_to_label_txt: str) -> Optional[pd.DataF
 
 
 # Run the YOLO model to detect objects.
-
+@st.cache
 def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
     # Load the network. Because this is cached it will only happen once.
     @st.cache(allow_output_mutation=True)
