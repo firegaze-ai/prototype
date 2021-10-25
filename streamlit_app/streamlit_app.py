@@ -42,7 +42,7 @@ def main():
 
 
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
-@profile
+# @profile
 def run_the_app_static():
     init_folders()
 
