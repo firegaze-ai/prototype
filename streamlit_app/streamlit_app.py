@@ -1,3 +1,4 @@
+import gc
 import urllib
 
 import streamlit as st
@@ -73,6 +74,7 @@ def run_the_app_static():
         image = load_image_from_file(image_url)
     elif validators.url(image_url):
         image = load_image_from_url(image_url)
+    gc.collect()
 
     # Add boxes for objects on the image. These are the boxes for the ground image.
     boxes = metadata[metadata.frame == selected_frame].drop(columns=["frame"])

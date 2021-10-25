@@ -76,6 +76,7 @@ def load_image_from_file(path_to_file):
     with open(path_to_file, "rb") as infile:
         data = np.asarray(bytearray(infile.read()), dtype="uint8")
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
+    del data
     image = image[:, :, [2, 1, 0]]  # BGR -> RGB
     return image
 
