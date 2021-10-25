@@ -146,5 +146,5 @@ yolov3.weights
 .pt
 
 # image folders
-streamlit_app/data/live_images/**/
-streamlit_app/data/results/**/
+streamlit_app/data/live_images/
+streamlit_app/data/results/
