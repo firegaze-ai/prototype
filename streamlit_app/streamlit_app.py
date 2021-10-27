@@ -11,7 +11,7 @@ from memory_profiler import profile
 from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, STATIC_IMAGES_DIR
 from inference import yolo_v5, batch_parse_yolo_labels_to_csv
 from tools import download_file, load_image_from_url, load_image_from_file, load_metadata, create_summary, \
-    init_folders
+    init_folders, stream_image_from_url
 from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_boxes
 
 
@@ -127,7 +127,7 @@ def run_the_app_live():
     for image_name, image_url in urls.items():
         path_to_image = os.path.join(DATA_URL_ROOT, "live_images", image_name)
         try:
-            image = load_image_from_url(image_url)
+            image = stream_image_from_url(image_url)
         except urllib.error.URLError as e:
             print(e)
             image = load_image_from_file(os.path.join(DATA_URL_ROOT, "stream_not_found.png"))

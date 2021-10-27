@@ -61,6 +61,18 @@ def get_file_content_as_string(path):
 # function as well, so we can reuse the images across runs.
 @st.cache(show_spinner=False)
 def load_image_from_url(url):
+    image = image_from_url(url)
+    return image
+
+
+# This function streams an image. Since we need the updated image on every run,
+# we don't reuse the images across runs.
+def stream_image_from_url(url):
+    image = image_from_url(url)
+    return image
+
+
+def image_from_url(url):
     with urllib.request.urlopen(url) as response:
         image = np.asarray(bytearray(response.read()), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
