@@ -39,19 +39,11 @@ def parse_yolo_label_into_dataframe(path_to_label_txt: str) -> Optional[pd.DataF
 
 # Run the YOLO model to detect objects.
 # @st.cache
-def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
+@profile
+def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold, model, imgsz, stride, ascii, pt, classify, names, half, device):
     # @st.cache(hash_funcs={builtins.function: my_hash_func})
-    def load_model(weights, imgsz, device):
-        model, imgsz, stride, ascii, pt, classify, names, half, device = load_weights(weights, imgsz, device)
-        return model, imgsz, stride, ascii, pt, classify, names, half, device
 
-    path_to_weights = os.path.join(DATA_URL_ROOT, "weights.pt")
-    imgsz = [640] * 2
-
-    model, imgsz, stride, ascii, pt, classify, names, half, device = load_model(
-        weights=path_to_weights,
-        imgsz=imgsz,
-        device="CPU")
+    check_requirements(exclude=('tensorboard', 'thop'))
 
     save_dir = run_with_preloaded_weights(
 
@@ -71,10 +63,11 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
         iou_thres=overlap_threshold,  # NMS IOU threshold
     )
 
-    check_requirements(exclude=('tensorboard', 'thop'))
-
     path_to_label_txt = os.path.join(save_dir, "labels",
         os.path.splitext(os.path.basename(path_to_image))[0] + ".txt")
+
+    del save_dir
+    gc.collect()
 
     boxes_df = parse_yolo_label_into_dataframe(path_to_label_txt)
     if boxes_df is not None:
@@ -82,8 +75,9 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
         result = boxes_df[["xmin", "ymin", "xmax", "ymax", "labels"]]
         del boxes_df, image
         gc.collect()
-        return result
-    return None
+        return model, result
+    result = None
+    return model, result
 
 
 def transform_ratio_to_pixels(boxes_df: pd.DataFrame, image) -> pd.DataFrame:
