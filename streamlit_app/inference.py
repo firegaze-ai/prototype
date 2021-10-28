@@ -7,11 +7,15 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 from memory_profiler import profile
+import torch
+from torch.torch_version import TorchVersion
 
 from config import DATA_URL_ROOT
 from tools import load_image_from_file
 
 from yolov5_merged.detect import run, load_weights, run_with_preloaded_weights
+from yolov5_merged.models.experimental import attempt_load
+from yolov5_merged.models.yolo import Model
 from yolov5_merged.utils.general import check_requirements
 
 YOLO_LABELS_TO_STRINGS = {0: "smoke"}
@@ -37,13 +41,32 @@ def parse_yolo_label_into_dataframe(path_to_label_txt: str) -> Optional[pd.DataF
     return None
 
 
+def torchversion_hash_func():
+    return 1
+
+
 # Run the YOLO model to detect objects.
 # @st.cache
 @profile
-def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold, model, imgsz, stride, ascii, pt, classify, names, half, device):
+def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
     # @st.cache(hash_funcs={builtins.function: my_hash_func})
 
     check_requirements(exclude=('tensorboard', 'thop'))
+
+    # Load model from weights
+    #
+    @st.cache(hash_funcs={torch.device: id, Model: id, TorchVersion: lambda _:None})
+    def load_model(weights, imgsz, device):
+        model, imgsz, stride, ascii, pt, classify, names, half, device = load_weights(weights, imgsz, device)
+        return model, imgsz, stride, ascii, pt, classify, names, half, device
+
+    path_to_weights = os.path.join(DATA_URL_ROOT, "weights.pt")
+    imgsz = [640] * 2
+
+    model, imgsz, stride, ascii, pt, classify, names, half, device = load_model(
+        weights=path_to_weights,
+        imgsz=imgsz,
+        device="CPU")
 
     save_dir = run_with_preloaded_weights(
 

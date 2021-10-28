@@ -93,8 +93,6 @@ def run_the_app_static():
 
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
 def run_the_app_live():
-
-
     # avoids the "DuplicateWidgetID" warning
     if "RefreshButton" in st.session_state:
         del st.session_state["RefreshButton"]
@@ -139,31 +137,18 @@ def run_the_app_live():
 
         images.append((path_to_image, image, image_name))
 
-    # Load model from weights
-    def load_model(weights, imgsz, device):
-        model, imgsz, stride, ascii, pt, classify, names, half, device = load_weights(weights, imgsz, device)
-        return model, imgsz, stride, ascii, pt, classify, names, half, device
-
-    path_to_weights = os.path.join(DATA_URL_ROOT, "weights.pt")
-    imgsz = [640] * 2
-
-    model, imgsz, stride, ascii, pt, classify, names, half, device = load_model(
-        weights=path_to_weights,
-        imgsz=imgsz,
-        device="CPU")
-
-
     # Add boxes for objects on the image. These are the boxes for the ground image.
     for path_to_image, image, image_name in images:
-        yolo_boxes = yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold, model, imgsz, stride, ascii, pt, classify, names, half, device)
+        yolo_boxes = yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold)
         draw_image_with_boxes(image, yolo_boxes, "{}".format(image_name),
             "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
                 overlap_threshold, confidence_threshold))
 
-        del yolo_boxes,path_to_image, image
+        del yolo_boxes, path_to_image, image
 
-    del images, model
+    del images
     gc.collect()
+
 
 if __name__ == "__main__":
     main()
