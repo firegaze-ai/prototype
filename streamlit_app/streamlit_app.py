@@ -1,9 +1,12 @@
 import gc
 import urllib
 
+import cv2
 import streamlit as st
 import os
 import validators
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from memory_profiler import profile
 
@@ -43,7 +46,7 @@ def main():
 
 
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
-# @profile
+@profile
 def run_the_app_static():
     init_folders()
 
@@ -87,11 +90,14 @@ def run_the_app_static():
     draw_image_with_boxes(image, yolo_boxes, "Real-time Computer Vision",
         "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
             overlap_threshold, confidence_threshold))
-    del yolo_boxes
+    del yolo_boxes, image
+
+
     gc.collect()
 
 
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
+@profile
 def run_the_app_live():
     # avoids the "DuplicateWidgetID" warning
     if "RefreshButton" in st.session_state:
@@ -133,8 +139,8 @@ def run_the_app_live():
             image = load_image_from_file(os.path.join(DATA_URL_ROOT, "stream_not_found.png"))
         if os.path.isfile(path_to_image):
             os.remove(path_to_image)
-        plt.imsave(path_to_image, image)
-
+        # plt.imsave(path_to_image, image)
+        cv2.imwrite(path_to_image, image)
         images.append((path_to_image, image, image_name))
 
     # Add boxes for objects on the image. These are the boxes for the ground image.

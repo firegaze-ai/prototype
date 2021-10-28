@@ -55,7 +55,7 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
 
     # Load model from weights
     #
-    @st.cache(hash_funcs={torch.device: id, Model: id, TorchVersion: lambda _:None})
+    @st.experimental_singleton
     def load_model(weights, imgsz, device):
         model, imgsz, stride, ascii, pt, classify, names, half, device = load_weights(weights, imgsz, device)
         return model, imgsz, stride, ascii, pt, classify, names, half, device
