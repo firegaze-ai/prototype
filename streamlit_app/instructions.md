@@ -1,4 +1,4 @@
-<img src="data/firegaze_banner.png" alt="firegaze.ai" width="400"/>
+![alt text](https://github.com/firegaze-ai/prototype/blob/main/streamlit_app/data/firegaze_banner_640.png?raw=true "Logo Title Text 1")
 
 # Wildfire smoke detector
 
