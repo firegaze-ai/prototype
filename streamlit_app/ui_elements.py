@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 import altair as alt
 import pandas as pd
@@ -9,7 +9,7 @@ import numpy as np
 from config import GARBAGE_COLLECT
 
 
-def frame_selector_ui(summary: pd.DataFrame) -> Tuple[int, str]:
+def frame_selector_ui(summary: pd.DataFrame) -> Union[Tuple[int, str], Tuple[None, None]]:
     st.sidebar.markdown("# Frame")
 
     # The user can pick which type of object to search for.

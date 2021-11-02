@@ -58,10 +58,10 @@ Tuple[Model, Optional[pd.DataFrame]]:
     # Load model from weights
     #
     @st.experimental_singleton
-    def load_model(weights: str, imgsz: List, device: str) -> Tuple[
-        Model, List, int, bool, bool, List, bool, torch.device]:
-        model, imgsz, stride, ascii, pt, classify, names, half, device = load_weights(weights, imgsz, device)
-        return model, imgsz, stride, ascii, pt, classify, names, half, device
+    def load_model(weights: str, imgsz: List[int], device_str: str) -> Tuple[
+        Model, List[int], int, bool, bool, List[str], bool, torch.device]:
+        model, imgsz, stride, ascii, pt, classify, names, half, device_torch = load_weights(weights, imgsz, device_str)
+        return model, imgsz, stride, ascii, pt, classify, names, half, device_torch
 
     path_to_weights = os.path.join(DATA_URL_ROOT, "weights.pt")
     imgsz = [640] * 2
@@ -69,7 +69,7 @@ Tuple[Model, Optional[pd.DataFrame]]:
     model, imgsz, stride, ascii, pt, classify, names, half, device = load_model(
         weights=path_to_weights,
         imgsz=imgsz,
-        device="CPU")
+        device_str="CPU")
 
     save_dir = run_with_preloaded_weights(
 

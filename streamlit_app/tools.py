@@ -1,6 +1,8 @@
 import os
 import shutil
 import urllib
+from urllib.request import urlopen
+
 import numpy as np
 import cv2
 import pandas as pd
@@ -25,7 +27,7 @@ def download_file(file_path: str):
         weights_warning = st.warning("Downloading %s..." % file_path)
         progress_bar = st.progress(0)
         with open(file_path, "wb") as output_file:
-            with urllib.request.urlopen(EXTERNAL_DEPENDENCIES[file_path]["url"]) as response:
+            with urlopen(EXTERNAL_DEPENDENCIES[file_path]["url"]) as response:
                 length = int(response.info()["Content-Length"])
                 counter = 0.0
                 MEGABYTES = 2.0 ** 20.0
@@ -53,27 +55,27 @@ def download_file(file_path: str):
 @st.cache(show_spinner=False)
 def get_file_content_as_string(path):
     url = 'https://raw.githubusercontent.com/streamlit/demo-self-driving/master/' + path
-    response = urllib.request.urlopen(url)
+    response = urlopen(url)
     return response.read().decode("utf-8")
 
 
 # This function loads an image from Streamlit public repo on S3. We use st.cache on this
 # function as well, so we can reuse the images across runs.
 @st.cache(show_spinner=False)
-def load_image_from_url(url):
+def load_image_from_url(url: str) -> np.ndarray:
     image = image_from_url(url)
     return image
 
 
 # This function streams an image. Since we need the updated image on every run,
 # we don't reuse the images across runs.
-def stream_image_from_url(url):
+def stream_image_from_url(url: str) -> np.ndarray:
     image = image_from_url(url)
     return image
 
 
 def image_from_url(url):
-    with urllib.request.urlopen(url) as response:
+    with urlopen(url) as response:
         image = np.asarray(bytearray(response.read()), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
     image = image[:, :, [2, 1, 0]]  # BGR -> RGB
@@ -94,7 +96,7 @@ def load_image_from_file(path_to_file: str) -> np.ndarray:
 
 
 @st.cache
-def load_metadata(url: str)-> pd.DataFrame:
+def load_metadata(url: str) -> pd.DataFrame:
     # To make Streamlit fast, st.cache allows us to reuse computation across runs.
     # In this common pattern, we download data from an endpoint only once.
     return pd.read_csv(url)

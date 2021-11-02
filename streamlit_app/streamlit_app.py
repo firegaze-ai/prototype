@@ -1,7 +1,9 @@
 import gc
 import urllib
+from urllib.error import URLError
 
 import cv2
+import numpy as np
 import streamlit as st
 import os
 import validators
@@ -65,19 +67,24 @@ def run_the_app_static():
 
     # Draw the UI elements to search for objects (pedestrians, cars, etc.)
     selected_frame_index, selected_frame = frame_selector_ui(summary)
-    if selected_frame_index == None:
+    if not selected_frame_index:
         st.error("No frames fit the criteria. Please select different label or number.")
-        return
 
     # Draw the UI element to select parameters for the YOLO object detector.
     confidence_threshold, overlap_threshold = object_detector_ui()
 
-    # Load the image from S3.
-    image_url = os.path.join(STATIC_IMAGES_DIR, selected_frame)
+    # Load the image.
+    if not selected_frame:
+        image_url = os.path.join(DATA_URL_ROOT, "stream_not_found.png")
+    else:
+        image_url = os.path.join(STATIC_IMAGES_DIR, selected_frame)
+
     if os.path.isfile(image_url):
         image = load_image_from_file(image_url)
     elif validators.url(image_url):
         image = load_image_from_url(image_url)
+    else:
+        image = np.zeros([200, 200])
     if GARBAGE_COLLECT:
         gc.collect()
 
@@ -134,7 +141,7 @@ def run_the_app_live():
         path_to_image = os.path.join(DATA_URL_ROOT, "live_images", image_name)
         try:
             image = stream_image_from_url(image_url)
-        except urllib.error.URLError as e:
+        except URLError as e:
             print(e)
             image = load_image_from_file(os.path.join(DATA_URL_ROOT, "stream_not_found.png"))
         if os.path.isfile(path_to_image):
