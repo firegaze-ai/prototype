@@ -11,7 +11,7 @@ from config import EXTERNAL_DEPENDENCIES, RESULTS_DIR, LIVE_IMAGES_DIR, STATIC_I
 
 
 # This file downloader demonstrates Streamlit animation.
-def download_file(file_path):
+def download_file(file_path: str):
     # Don't download the file twice. (If possible, verify the download using the file length.)
     if os.path.exists(file_path):
         if "size" not in EXTERNAL_DEPENDENCIES[file_path]:
@@ -83,7 +83,7 @@ def image_from_url(url):
 # This function loads an image from disk. We use st.cache on this
 # function as well, so we can reuse the images across runs.
 @st.cache(show_spinner=False)
-def load_image_from_file(path_to_file):
+def load_image_from_file(path_to_file: str) -> np.ndarray:
     print(path_to_file)
     with open(path_to_file, "rb") as infile:
         data = np.asarray(bytearray(infile.read()), dtype="uint8")
@@ -94,14 +94,14 @@ def load_image_from_file(path_to_file):
 
 
 @st.cache
-def load_metadata(url):
+def load_metadata(url: str)-> pd.DataFrame:
     # To make Streamlit fast, st.cache allows us to reuse computation across runs.
     # In this common pattern, we download data from an endpoint only once.
     return pd.read_csv(url)
 
 
 @st.cache
-def create_summary(metadata):
+def create_summary(metadata: pd.DataFrame) -> pd.DataFrame:
     # This function uses some Pandas magic to summarize the metadata Dataframe.
     one_hot_encoded = pd.get_dummies(metadata[["frame", "label"]], columns=["label"])
     summary = one_hot_encoded.groupby(["frame"]).sum().rename(columns={

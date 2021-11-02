@@ -1,3 +1,5 @@
+from typing import Union, Tuple
+
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -7,7 +9,7 @@ import numpy as np
 from config import GARBAGE_COLLECT
 
 
-def frame_selector_ui(summary):
+def frame_selector_ui(summary: pd.DataFrame) -> Tuple[int, str]:
     st.sidebar.markdown("# Frame")
 
     # The user can pick which type of object to search for.
@@ -34,7 +36,7 @@ def frame_selector_ui(summary):
 
 
 # This sidebar UI lets the user select parameters for the YOLO object detector.
-def object_detector_ui():
+def object_detector_ui() -> Tuple[float, float]:
     st.sidebar.markdown("# Model")
     confidence_threshold = st.sidebar.slider("Confidence threshold", 0.0, 1.0, 0.5, 0.01)
     overlap_threshold = st.sidebar.slider("Overlap threshold", 0.0, 1.0, 0.3, 0.01)
@@ -48,7 +50,7 @@ def get_selected_frames(summary, label):
 
 
 # Draws an image with boxes overlayed to indicate the presence of cars, pedestrians etc.
-def draw_image_with_boxes(image, boxes, header, description):
+def draw_image_with_boxes(image: np.ndarray, boxes: pd.DataFrame, header:str , description:str):
     # Superpose the semi-transparent object detection boxes.    # Colors for the boxes
     LABEL_COLORS = {
         "smoke": [255, 0, 0],

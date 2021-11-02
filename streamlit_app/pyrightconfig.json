@@ -1,0 +1,36 @@
+{
+  "include": [
+    "*"
+  ],
+  
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "data",
+    "yolov5_merged"
+  ],
+
+  "ignore": [
+    "src/oldstuff"
+  ],
+
+  "stubPath": "src/stubs",
+  "venv": "venv",
+
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+
+  "pythonVersion": "3.8",
+  "pythonPlatform": "Linux",
+
+  "executionEnvironments": [
+    {
+      "root": "src/web",
+      "pythonVersion": "3.8",
+      "pythonPlatform": "Linux",
+      "extraPaths": [
+        "src/service_libs"
+      ]
+    }
+  ]
+}

@@ -2,8 +2,9 @@ import builtins
 import gc
 import glob
 import os
-from typing import Optional
+from typing import Optional, List, Tuple
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 from memory_profiler import profile
@@ -48,7 +49,8 @@ def torchversion_hash_func():
 # Run the YOLO model to detect objects.
 # @st.cache
 # @profile
-def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
+def yolo_v5(path_to_image: str, image: np.ndarray, confidence_threshold: float, overlap_threshold: float) -> \
+Tuple[Model, Optional[pd.DataFrame]]:
     # @st.cache(hash_funcs={builtins.function: my_hash_func})
 
     check_requirements(exclude=('tensorboard', 'thop'))
@@ -56,7 +58,8 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
     # Load model from weights
     #
     @st.experimental_singleton
-    def load_model(weights, imgsz, device):
+    def load_model(weights: str, imgsz: List, device: str) -> Tuple[
+        Model, List, int, bool, bool, List, bool, torch.device]:
         model, imgsz, stride, ascii, pt, classify, names, half, device = load_weights(weights, imgsz, device)
         return model, imgsz, stride, ascii, pt, classify, names, half, device
 
@@ -106,7 +109,7 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
     return model, result
 
 
-def transform_ratio_to_pixels(boxes_df: pd.DataFrame, image) -> pd.DataFrame:
+def transform_ratio_to_pixels(boxes_df: pd.DataFrame, image: np.ndarray) -> pd.DataFrame:
     boxes_df["xmin"] = (boxes_df["xmin"] * image.shape[1]).astype("int")
     boxes_df["xmax"] = (boxes_df["xmax"] * image.shape[1]).astype("int")
     boxes_df["ymin"] = (boxes_df["ymin"] * image.shape[0]).astype("int")
