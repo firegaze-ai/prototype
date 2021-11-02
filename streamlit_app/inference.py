@@ -59,7 +59,7 @@ Tuple[Model, Optional[pd.DataFrame]]:
     #
     @st.experimental_singleton
     def load_model(weights: str, imgsz: List[int], device_str: str) -> Tuple[
-        Model, List[int], int, bool, bool, List[str], bool, torch.device]:
+        Model, List[int], int, bool, bool,bool,  List[str], bool, torch.device]:
         model, imgsz, stride, ascii, pt, classify, names, half, device_torch = load_weights(weights, imgsz, device_str)
         return model, imgsz, stride, ascii, pt, classify, names, half, device_torch
 
@@ -127,10 +127,10 @@ def batch_parse_yolo_labels_to_csv(path_to_images_and_labels_dir: str, path_to_l
     images = []
     for filename, df in list_of_df:
         paths_to_images = glob.glob(os.path.join(path_to_images_and_labels_dir, filename + ".jp*"))
-        if len(paths_to_images) > 0:
-            path_to_image = paths_to_images[0]
+        if len(paths_to_images) > 0: # if the filename we are trying to match is found
+            path_to_image = paths_to_images[0]  # retrieve the filename from the list
         else:
-            image_filename = ""
+            raise ValueError("There are no images inside the folder: {}".format(path_to_images_and_labels_dir))
         df["frame"] = os.path.basename(path_to_image)
         image = load_image_from_file(path_to_image)
         df = transform_ratio_to_pixels(df, image)

@@ -57,54 +57,59 @@ def run_the_app_static():
     # recomputes only whatever subset is required to get the right answer!
 
     path_to_labels_csv = os.path.join(STATIC_IMAGES_DIR, "labels.csv")
-    batch_parse_yolo_labels_to_csv(STATIC_IMAGES_DIR, path_to_labels_csv)
-
-    metadata = load_metadata(path_to_labels_csv)
-    summary = create_summary(metadata)
-
-    # Uncomment these lines to peek at these DataFrames.
-    # st.write('## Metadata', metadata[:1000], '## Summary', summary[:1000])
-
-    # Draw the UI elements to search for objects (pedestrians, cars, etc.)
-    selected_frame_index, selected_frame = frame_selector_ui(summary)
-    if not selected_frame_index:
-        st.error("No frames fit the criteria. Please select different label or number.")
-
-    # Draw the UI element to select parameters for the YOLO object detector.
-    confidence_threshold, overlap_threshold = object_detector_ui()
-
-    # Load the image.
-    if not selected_frame:
-        image_url = os.path.join(DATA_URL_ROOT, "stream_not_found.png")
+    try:
+        batch_parse_yolo_labels_to_csv(STATIC_IMAGES_DIR, path_to_labels_csv)
+    except ValueError as e:
+        print(e)
     else:
-        image_url = os.path.join(STATIC_IMAGES_DIR, selected_frame)
+        metadata = load_metadata(path_to_labels_csv)
+        summary = create_summary(metadata)
 
-    if os.path.isfile(image_url):
-        image = load_image_from_file(image_url)
-    elif validators.url(image_url):
-        image = load_image_from_url(image_url)
-    else:
-        image = np.zeros([200, 200])
-    if GARBAGE_COLLECT:
-        gc.collect()
+        # Uncomment these lines to peek at these DataFrames.
+        # st.write('## Metadata', metadata[:1000], '## Summary', summary[:1000])
 
-    # Add boxes for objects on the image. These are the boxes for the ground image.
-    boxes = metadata[metadata.frame == selected_frame].drop(columns=["frame"])
-    draw_image_with_boxes(image, boxes, "Ground Truth",
-        "**Human-annotated data** (frame `%i`)" % selected_frame_index)
+        # Draw the UI elements to search for objects (pedestrians, cars, etc.)
+        selected_frame_index, selected_frame = frame_selector_ui(summary)
+        if not selected_frame_index:
+            st.error("No frames fit the criteria. Please select different label or number.")
 
-    # Get the boxes for the objects detected by YOLO by running the YOLO model.
-    model, yolo_boxes = yolo_v5(image_url, image, confidence_threshold, overlap_threshold)
-    draw_image_with_boxes(image, yolo_boxes, "Real-time Computer Vision",
-        "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
-            overlap_threshold, confidence_threshold))
-    if GARBAGE_COLLECT:
-        del yolo_boxes, image, model
-        gc.collect()
+        # Draw the UI element to select parameters for the YOLO object detector.
+        confidence_threshold, overlap_threshold = object_detector_ui()
+
+        # Load the image.
+        if not selected_frame:
+            image_url = os.path.join(DATA_URL_ROOT, "stream_not_found.png")
+        else:
+            image_url = os.path.join(STATIC_IMAGES_DIR, selected_frame)
+
+        if os.path.isfile(image_url):
+            image = load_image_from_file(image_url)
+        elif validators.url(image_url):
+            image = load_image_from_url(image_url)
+        else:
+            image = np.zeros([200, 200])
+
+        if GARBAGE_COLLECT:
+            gc.collect()
+
+        # Add boxes for objects on the image. These are the boxes for the ground image.
+        boxes = metadata[metadata.frame == selected_frame].drop(columns=["frame"])
+        draw_image_with_boxes(image, boxes, "Ground Truth",
+            "**Human-annotated data** (frame `%i`)" % selected_frame_index)
+
+        # Get the boxes for the objects detected by YOLO by running the YOLO model.
+        model, yolo_boxes = yolo_v5(image_url, image, confidence_threshold, overlap_threshold)
+        draw_image_with_boxes(image, yolo_boxes, "Real-time Computer Vision",
+            "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
+                overlap_threshold, confidence_threshold))
+    finally:
+        if GARBAGE_COLLECT:
+            del yolo_boxes, image, model
+            gc.collect()
 
 
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
-# @profile
+@profile
 def run_the_app_live():
     # avoids the "DuplicateWidgetID" warning
     if "RefreshButton" in st.session_state:
