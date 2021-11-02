@@ -4,6 +4,9 @@ import streamlit as st
 import numpy as np
 
 # This sidebar UI is a little search engine to find certain object types.
+from config import GARBAGE_COLLECT
+
+
 def frame_selector_ui(summary):
     st.sidebar.markdown("# Frame")
 
@@ -62,3 +65,5 @@ def draw_image_with_boxes(image, boxes, header, description):
     st.subheader(header)
     st.markdown(description)
     st.image(image_with_boxes.astype(np.uint8), use_column_width=True)
+    if GARBAGE_COLLECT:
+        del image, image_with_boxes

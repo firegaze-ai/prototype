@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-
+from memory_profiler import profile
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
 if str(ROOT) not in sys.path:
@@ -291,6 +291,7 @@ def load_weights(weights, imgsz, device, half=False):
 
 
 @torch.no_grad()
+# @profile
 def run_with_preloaded_weights(model,  # model.pt preloaded into memory
                                source,  # file/dir/URL/glob, 0 for webcam
                                stride,
@@ -444,6 +445,8 @@ def run_with_preloaded_weights(model,  # model.pt preloaded into memory
         print(f"Results saved to {colorstr('bold', save_dir)}{s}")
     # if update:
     #     strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
+
+    del pred, dataset
 
     return save_dir
 

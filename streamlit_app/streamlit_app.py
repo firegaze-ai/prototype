@@ -5,13 +5,13 @@ import cv2
 import streamlit as st
 import os
 import validators
-import matplotlib
-matplotlib.use("Agg")
+# import matplotlib
+# matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from memory_profiler import profile
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
-from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, STATIC_IMAGES_DIR
+from config import DATA_URL_ROOT, EXTERNAL_DEPENDENCIES, STATIC_IMAGES_DIR, GARBAGE_COLLECT
 from inference import yolo_v5, batch_parse_yolo_labels_to_csv
 from tools import download_file, load_image_from_url, load_image_from_file, load_metadata, create_summary, \
     init_folders, stream_image_from_url
@@ -78,7 +78,8 @@ def run_the_app_static():
         image = load_image_from_file(image_url)
     elif validators.url(image_url):
         image = load_image_from_url(image_url)
-    gc.collect()
+    if GARBAGE_COLLECT:
+        gc.collect()
 
     # Add boxes for objects on the image. These are the boxes for the ground image.
     boxes = metadata[metadata.frame == selected_frame].drop(columns=["frame"])
@@ -86,18 +87,17 @@ def run_the_app_static():
         "**Human-annotated data** (frame `%i`)" % selected_frame_index)
 
     # Get the boxes for the objects detected by YOLO by running the YOLO model.
-    yolo_boxes = yolo_v5(image_url, image, confidence_threshold, overlap_threshold)
+    model, yolo_boxes = yolo_v5(image_url, image, confidence_threshold, overlap_threshold)
     draw_image_with_boxes(image, yolo_boxes, "Real-time Computer Vision",
         "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
             overlap_threshold, confidence_threshold))
-    del yolo_boxes, image
-
-
-    gc.collect()
+    if GARBAGE_COLLECT:
+        del yolo_boxes, image, model
+        gc.collect()
 
 
 # This is the main app app itself, which appears when the user selects "Run the app on static dataset".
-@profile
+# @profile
 def run_the_app_live():
     # avoids the "DuplicateWidgetID" warning
     if "RefreshButton" in st.session_state:
@@ -145,15 +145,16 @@ def run_the_app_live():
 
     # Add boxes for objects on the image. These are the boxes for the ground image.
     for path_to_image, image, image_name in images:
-        yolo_boxes = yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold)
+        model, yolo_boxes = yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold)
+        print(yolo_boxes)
         draw_image_with_boxes(image, yolo_boxes, "{}".format(image_name),
             "**YOLO v5 Model** (overlap `%3.1f`) (confidence `%3.1f`)" % (
                 overlap_threshold, confidence_threshold))
-
-        del yolo_boxes, path_to_image, image
-
-    del images
-    gc.collect()
+        if GARBAGE_COLLECT:
+            del yolo_boxes, path_to_image, image, model
+    if GARBAGE_COLLECT:
+        del images
+        gc.collect()
 
 
 if __name__ == "__main__":

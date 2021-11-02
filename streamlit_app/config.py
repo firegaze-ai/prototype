@@ -2,7 +2,7 @@ import os
 
 # Path to the Streamlit public S3 bucket
 DATA_URL_ROOT = os.path.join(os.path.dirname(__file__), "data")
-
+GARBAGE_COLLECT = True
 # External files to download.
 EXTERNAL_DEPENDENCIES = {
     "yolov3.weights": {

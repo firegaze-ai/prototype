@@ -10,7 +10,7 @@ from memory_profiler import profile
 import torch
 from torch.torch_version import TorchVersion
 
-from config import DATA_URL_ROOT
+from config import DATA_URL_ROOT, GARBAGE_COLLECT
 from tools import load_image_from_file
 
 from yolov5_merged.detect import run, load_weights, run_with_preloaded_weights
@@ -47,7 +47,7 @@ def torchversion_hash_func():
 
 # Run the YOLO model to detect objects.
 # @st.cache
-@profile
+# @profile
 def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
     # @st.cache(hash_funcs={builtins.function: my_hash_func})
 
@@ -89,15 +89,18 @@ def yolo_v5(path_to_image, image, confidence_threshold, overlap_threshold):
     path_to_label_txt = os.path.join(save_dir, "labels",
         os.path.splitext(os.path.basename(path_to_image))[0] + ".txt")
 
-    del save_dir
-    gc.collect()
+    if GARBAGE_COLLECT:
+        del save_dir
+        gc.collect()
 
     boxes_df = parse_yolo_label_into_dataframe(path_to_label_txt)
     if boxes_df is not None:
         boxes_df = transform_ratio_to_pixels(boxes_df, image)
         result = boxes_df[["xmin", "ymin", "xmax", "ymax", "labels"]]
-        del boxes_df, image
-        gc.collect()
+        print(result)
+        if GARBAGE_COLLECT:
+            del boxes_df, image
+            gc.collect()
         return model, result
     result = None
     return model, result
