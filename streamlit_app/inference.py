@@ -9,7 +9,6 @@ import pandas as pd
 import streamlit as st
 from memory_profiler import profile
 import torch
-from torch.torch_version import TorchVersion
 
 from config import DATA_URL_ROOT, GARBAGE_COLLECT
 from tools import load_image_from_file
