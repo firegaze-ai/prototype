@@ -7,14 +7,13 @@ from typing import Optional, List, Tuple
 import numpy as np
 import pandas as pd
 import streamlit as st
-from memory_profiler import profile
+# from memory_profiler import profile
 import torch
 
 from config import DATA_URL_ROOT, GARBAGE_COLLECT
 from tools import load_image_from_file
 
-from yolov5_merged.detect import run, load_weights, run_with_preloaded_weights
-from yolov5_merged.models.experimental import attempt_load
+from yolov5_merged.detect import load_weights, run_with_preloaded_weights
 from yolov5_merged.models.yolo import Model
 from yolov5_merged.utils.general import check_requirements
 
@@ -49,7 +48,7 @@ def torchversion_hash_func():
 # @st.cache
 # @profile
 def yolo_v5(path_to_image: str, image: np.ndarray, confidence_threshold: float, overlap_threshold: float) -> \
-Tuple[Model, Optional[pd.DataFrame]]:
+        Tuple[Model, Optional[pd.DataFrame]]:
     # @st.cache(hash_funcs={builtins.function: my_hash_func})
 
     check_requirements(exclude=('tensorboard', 'thop'))
@@ -58,8 +57,9 @@ Tuple[Model, Optional[pd.DataFrame]]:
     #
     @st.experimental_singleton
     def load_model(weights: str, imgsz: List[int], device_str: str) -> Tuple[
-        Model, List[int], int, bool, bool,bool,  List[str], bool, torch.device]:
-        model, imgsz, stride, ascii, pt, classify, names, half, device_torch = load_weights(weights, imgsz, device_str)
+        Model, List[int], int, bool, bool, bool, List[str], bool, torch.device]:
+        model, imgsz, stride, ascii, pt, classify, names, half, device_torch = load_weights(weights, imgsz,
+            device_str)
         return model, imgsz, stride, ascii, pt, classify, names, half, device_torch
 
     path_to_weights = os.path.join(DATA_URL_ROOT, "weights.pt")
@@ -126,10 +126,11 @@ def batch_parse_yolo_labels_to_csv(path_to_images_and_labels_dir: str, path_to_l
     images = []
     for filename, df in list_of_df:
         paths_to_images = glob.glob(os.path.join(path_to_images_and_labels_dir, filename + ".jp*"))
-        if len(paths_to_images) > 0: # if the filename we are trying to match is found
+        if len(paths_to_images) > 0:  # if the filename we are trying to match is found
             path_to_image = paths_to_images[0]  # retrieve the filename from the list
         else:
-            raise ValueError("There are no images inside the folder: {}".format(path_to_images_and_labels_dir))
+            raise ValueError(
+                "There are no images inside the folder: {}".format(path_to_images_and_labels_dir))
         df["frame"] = os.path.basename(path_to_image)
         image = load_image_from_file(path_to_image)
         df = transform_ratio_to_pixels(df, image)

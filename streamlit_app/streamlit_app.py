@@ -1,5 +1,4 @@
 import gc
-import urllib
 from urllib.error import URLError
 
 import cv2
@@ -7,9 +6,6 @@ import numpy as np
 import streamlit as st
 import os
 import validators
-# import matplotlib
-# matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 from memory_profiler import profile
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
@@ -18,7 +14,6 @@ from inference import yolo_v5, batch_parse_yolo_labels_to_csv
 from tools import download_file, load_image_from_url, load_image_from_file, load_metadata, create_summary, \
     init_folders, stream_image_from_url
 from ui_elements import frame_selector_ui, object_detector_ui, draw_image_with_boxes
-from yolov5_merged.detect import load_weights
 
 
 def main():
