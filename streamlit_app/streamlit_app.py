@@ -149,6 +149,8 @@ def run_the_app_live():
         except URLError as e:
             print(e)
             image = load_image_from_file(os.path.join(DATA_URL_ROOT, "stream_not_found.png"))
+        except cv2.error as e:
+            print("OpenCV error...")
         if os.path.isfile(path_to_image):
             os.remove(path_to_image)
         # plt.imsave(path_to_image, image)
